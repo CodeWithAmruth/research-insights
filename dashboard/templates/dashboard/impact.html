@@ -1,53 +1,28 @@
 {% extends "base.html" %}
-
 {% block content %}
-
     <div class="space-y-8">
-
-    <!-- Header -->
-
+        <!-- Header -->
         <div class="space-y-6">
-
             {% include "components/page_header.html" with icon="📈" title="Impact Analysis" subtitle="Journal performance overview" %}
-
             {% include "components/filter_bar.html" %}
-
         </div>
-
-    <!-- Stats -->
-
+        <!-- Stats -->
         <div class="stats stats-vertical lg:stats-horizontal shadow border border-base-300 w-full">
-
             {% include "components/stats_cards.html" with title="Journals" value=impact_total_journals color="text-info" %}
-
             {% include "components/stats_cards.html" with title="Publications" value=impact_total_publications color="text-success" %}
-
             {% include "components/stats_cards.html" with title="Average IF" value=impact_average_factor|floatformat:2 color="text-warning" %}
-
             {% include "components/stats_cards.html" with title="Highest IF" value=impact_highest_factor|floatformat:2 color="text-error" %}
-
         </div>
-
-    <!-- Charts -->
-
+        <!-- Charts -->
         <div class="grid xl:grid-cols-2 gap-6">
-
             {% include "components/chart_card.html" with title="Top Journals" id="impactBarChart" %}
-
             {% include "components/chart_card.html" with title="Publication Distribution" id="impactPieChart" %}
-
         </div>
-
-    <!-- Table -->
-
+        <!-- Table -->
         {% include "tables/impact_table.html" %}
-
     </div>
-
     {{ journal_impact_data|json_script:"journal-impact-data" }}
-
     <script>
-
         document.addEventListener("DOMContentLoaded",()=>{
 
             const impactData=JSON.parse(
@@ -119,5 +94,4 @@
         });
 
     </script>
-
 {% endblock %}

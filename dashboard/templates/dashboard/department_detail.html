@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="space-y-8">
+        {% include "components/page_header.html" with icon="🏢" title=department.name subtitle="Department Publications" %}
+        <div class="stats stats-vertical md:stats-horizontal shadow border border-base-300 w-full bg-base-100">
+            {% include "components/stats_cards.html" with title="Publications" value=publication_count color="text-primary" %}
+            {% include "components/stats_cards.html" with title="Total Impact" value=total_impact|floatformat:2 color="text-secondary" %}
+            {% include "components/stats_cards.html" with title="Average Impact" value=average_impact|floatformat:2 color="text-accent" %}
+            {% include "components/stats_cards.html" with title="Highest Impact" value=highest_impact|floatformat:2 color="text-success" %}
+        </div>
+        <div class="card bg-base-100 shadow border border-base-300">
+            <div class="card-body">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="card-title">Publications</h2>
+                        <p class="text-sm text-base-content/60">
+                            Showing {{ page_obj.start_index }} - {{ page_obj.end_index }}
+                            of {{ page_obj.paginator.count }} publications
+                        </p>
+                    </div>
+                    <a href="{% url 'dashboard:departments' %}"
+                       class="btn btn-outline btn-sm">← Back</a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra table-pin-rows">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Journal</th>
+                                <th>Year</th>
+                                <th>Document Type</th>
+                                <th>Impact Factor</th>
+                                <th>Authors</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for publication in page_obj %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td class="max-w-md">
+                                        <div class="font-medium">{{ publication.title }}</div>
+                                        {% if publication.doi %}
+                                            <div class="text-xs opacity-60">DOI: {{ publication.doi }}</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ publication.journal.name|default:"—" }}</td>
+                                    <td>{{ publication.date_published.year|default:"—" }}</td>
+                                    <td>
+                                        <span>{{ publication.document_type|default:"—" }}</span>
+                                    </td>
+                                    <td>{{ publication.journal.impact_factor|default:0|floatformat:2 }}</td>
+                                    <td>
+                                        {% for author in publication.authors.all %}
+                                            {{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                            —
+                                        {% endfor %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'publications:publication_detail' publication.pk %}"
+                                           class="btn btn-primary btn-xs">View</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8">
+                                        {% include "components/empty_state.html" with title="No publications found" description="No publications are associated with this department." %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include "components/pagination.html" with object_name="publications" %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

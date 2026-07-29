@@ -1,291 +1,91 @@
 {% extends "base.html" %}
-
 {% block content %}
-
     <div class="space-y-8">
-
-
-    <!-- Header + Filters -->
-
+        <!-- Header + Filters -->
         <div class="space-y-6">
-
             {% include "components/page_header.html" with icon="👥" title="RRI Role Analysis" subtitle="Role-wise publication distribution and impact analysis." %}
-
             {% include "components/filter_bar.html" %}
-
         </div>
-
-
-
-
-    <!-- KPI -->
-
+        <!-- KPI -->
         <div class="stats stats-vertical md:stats-horizontal shadow border border-base-300 w-full bg-base-100">
-
             {% include "components/stats_cards.html" with title="RRI Roles" value=rri_role_count color="text-primary" %}
-
             {% include "components/stats_cards.html" with title="Publications" value=rri_role_total_publications color="text-secondary" %}
-
             {% include "components/stats_cards.html" with title="Average Impact" value=rri_role_average_impact|floatformat:2 color="text-accent" %}
-
             {% include "components/stats_cards.html" with title="Highest Impact" value=rri_role_highest_impact|floatformat:2 color="text-success" %}
-
         </div>
-
-
-
-
-    <!-- Charts -->
-
+        <!-- Charts -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
             {% include "components/chart_card.html" with title="Publications by RRI Role" id="rriRoleBarChart" %}
-
             {% include "components/chart_card.html" with title="Impact Distribution" id="rriRolePieChart" %}
-
         </div>
-
-
-
-
-
-    <!-- Table -->
-
+        <!-- Table -->
         <div class="card bg-base-100 shadow border border-base-300">
-
-
             <div class="card-body">
-
-
-
                 <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-
-
                     <div>
-
-                        <h2 class="card-title">
-                            RRI Role Summary
-                        </h2>
-
-
+                        <h2 class="card-title">RRI Role Summary</h2>
                         <p class="text-sm text-base-content/60">
-
                             Showing
-
                             {{ page_obj.start_index }}
-
                             -
-
                             {{ page_obj.end_index }}
-
                             of
-
                             {{ page_obj.paginator.count }}
-
                             roles
-
                         </p>
-
                     </div>
-
-
-
                     <span class="badge badge-primary badge-outline badge-lg">
-
                         {{ page_obj.paginator.count }}
-
                         Roles
-
                     </span>
-
-
                 </div>
-
-
-
-
-
                 <div class="overflow-x-auto">
-
-
                     <table class="table table-zebra table-pin-rows">
-
-
                         <thead>
-
                             <tr>
-
                                 <th>#</th>
-
-                                <th>
-                                    RRI Role
-                                </th>
-
-                                <th class="text-center">
-                                    Publications
-                                </th>
-
-                                <th class="text-center">
-                                    Total IF
-                                </th>
-
-                                <th class="text-center">
-                                    Average IF
-                                </th>
-
-                                <th class="text-center">
-                                    Share
-                                </th>
-
-
+                                <th>RRI Role</th>
+                                <th class="text-center">Publications</th>
+                                <th class="text-center">Total IF</th>
+                                <th class="text-center">Average IF</th>
+                                <th class="text-center">Share</th>
+                                <th class="text-center">Actions</th>
                             </tr>
-
-
                         </thead>
-
-
-
-
                         <tbody>
-
-
                             {% for row in page_obj %}
-
-
                                 <tr>
-
-
-                                    <td>
-
-                                        {{ page_obj.start_index|add:forloop.counter0 }}
-
-                                    </td>
-
-
-
-                                    <td>
-
-                                        {{ row.authors__rri_role|default:"Unknown" }}
-
-                                    </td>
-
-
-
-
+                                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                                    <td>{{ row.authors__rri_role|default:"Unknown" }}</td>
                                     <td class="text-center">
-
-
-                                        <span class="badge badge-primary badge-outline">
-
-                                            {{ row.total_publications }}
-
-                                        </span>
-
-
+                                        <span class="badge badge-primary badge-outline">{{ row.total_publications }}</span>
                                     </td>
-
-
-
-
+                                    <td class="text-center">{{ row.total_impact_factor|default:0|floatformat:2 }}</td>
                                     <td class="text-center">
-
-
-                                        {{ row.total_impact_factor|default:0|floatformat:2 }}
-
-
+                                        <span class="badge badge-success badge-outline">{{ row.average_impact_factor|default:0|floatformat:2 }}</span>
                                     </td>
-
-
-
-
+                                    <td class="text-center">{% widthratio row.total_publications rri_role_total_publications 100 %}%</td>
                                     <td class="text-center">
-
-
-                                        <span class="badge badge-success badge-outline">
-
-                                            {{ row.average_impact_factor|default:0|floatformat:2 }}
-
-                                        </span>
-
-
+                                        <a href="{% url 'dashboard:rri_role_detail' row.authors__rri_role %}"
+                                           class="btn btn-primary btn-xs">View</a>
                                     </td>
-
-
-
-
-                                    <td class="text-center">
-
-
-                                        {% widthratio row.total_publications rri_role_total_publications 100 %}%
-
-
-                                    </td>
-
-
-
                                 </tr>
-
-
-
                             {% empty %}
-
-
                                 <tr>
-
-
                                     <td colspan="6">
-
-
                                         {% include "components/empty_state.html" with title="No RRI role data found" description="Try changing your filters." %}
-
-
                                     </td>
-
-
                                 </tr>
-
-
-
                             {% endfor %}
-
-
-
                         </tbody>
-
-
-
                     </table>
-
-
                 </div>
-
-
-
-
                 {% include "components/pagination.html" with object_name="RRI roles" %}
-
-
-
             </div>
-
-
         </div>
-
-
     </div>
-
-
-
-
-
     {{ rri_roles_data|json_script:"rri-role-data" }}
-
-
-
-
     <script>
-
-
         document.addEventListener("DOMContentLoaded", () => {
 
 
@@ -504,7 +304,4 @@
 
 
     </script>
-
-
-
 {% endblock %}

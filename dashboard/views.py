@@ -2,6 +2,7 @@ from django.db.models import Count, Avg, Sum, Max, Prefetch, Min
 from django.urls import reverse
 from dashboard.filters import DynamicFilter
 from publications.models import (
+    Department,
     Journal,
     Publication,
     Author,
@@ -10,6 +11,7 @@ from publications.models import (
 from django.views.generic import TemplateView
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404
+from urllib.parse import unquote
 
 
 class DashboardHomeView(TemplateView):
@@ -984,6 +986,69 @@ class DepartmentsView(TemplateView):
         return context
 
 
+class DepartmentDetailView(TemplateView):
+    template_name = "dashboard/department_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        department_id = self.kwargs["pk"]
+
+        department = get_object_or_404(
+            Department,
+            pk=department_id,
+        )
+
+        publications = (
+            Publication.objects.select_related("journal")
+            .prefetch_related(
+                "authors",
+                "departments",
+            )
+            .filter(
+                departments=department,
+            )
+            .distinct()
+            .order_by("-date_published")
+        )
+
+        summary = publications.aggregate(
+            total_publications=Count("id"),
+            total_impact_factor=Sum("journal__impact_factor"),
+            average_impact_factor=Avg("journal__impact_factor"),
+            highest_impact_factor=Max("journal__impact_factor"),
+        )
+
+        paginator = Paginator(publications, 10)
+        page_obj = paginator.get_page(self.request.GET.get("page"))
+
+        context.update(
+            {
+                "department": department,
+                "page_obj": page_obj,
+                "publication_count": summary["total_publications"] or 0,
+                "total_impact": summary["total_impact_factor"] or 0,
+                "average_impact": summary["average_impact_factor"] or 0,
+                "highest_impact": summary["highest_impact_factor"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "Department Overview",
+                        "url": reverse("dashboard:departments"),
+                    },
+                    {
+                        "label": department.name,
+                    },
+                ],
+            }
+        )
+
+        return context
+
+
 # =====================================================
 # COLLABORATION OVERVIEW
 # =====================================================
@@ -1082,6 +1147,67 @@ class CollaborationView(TemplateView):
                     },
                     {
                         "label": "Collaboration Overview",
+                    },
+                ],
+            }
+        )
+
+        return context
+
+
+class CollaborationDetailView(TemplateView):
+    template_name = "dashboard/collaboration_detail.html"
+
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        collaboration_type = self.kwargs["collaboration_type"]
+
+        publications = (
+            Publication.objects.filter(collaboration_type=collaboration_type)
+            .select_related("journal")
+            .prefetch_related(
+                "authors",
+                "departments",
+            )
+            .order_by("-date_published")
+        )
+
+        paginator = Paginator(
+            publications,
+            self.paginate_by,
+        )
+
+        page_obj = paginator.get_page(self.request.GET.get("page"))
+
+        summary = publications.aggregate(
+            total_publications=Count("id"),
+            total_impact_factor=Sum("journal__impact_factor"),
+            average_impact_factor=Avg("journal__impact_factor"),
+            highest_impact_factor=Max("journal__impact_factor"),
+        )
+
+        context.update(
+            {
+                "collaboration_type": collaboration_type,
+                "page_obj": page_obj,
+                "publication_count": summary["total_publications"] or 0,
+                "total_impact_factor": summary["total_impact_factor"] or 0,
+                "average_impact_factor": summary["average_impact_factor"] or 0,
+                "highest_impact_factor": summary["highest_impact_factor"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "Collaboration Overview",
+                        "url": reverse("dashboard:collaboration"),
+                    },
+                    {
+                        "label": collaboration_type,
                     },
                 ],
             }
@@ -1226,6 +1352,65 @@ class CountryCollaborationView(TemplateView):
         return context
 
 
+class CountryCollaborationDetailView(TemplateView):
+    template_name = "dashboard/country_collaboration_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        country = unquote(kwargs["country"]).rstrip(";").strip()
+
+        publications = (
+            Publication.objects.select_related("journal")
+            .prefetch_related(
+                "authors",
+                Prefetch(
+                    "author_affiliations",
+                    queryset=AuthorAffiliation.objects.select_related(
+                        "author",
+                        "affiliation",
+                    ),
+                ),
+            )
+            .filter(author_affiliations__affiliation__country__iregex=rf"^{country};?$")
+            .distinct()
+            .order_by("-date_published")
+        )
+
+        summary = publications.aggregate(
+            total_publications=Count("id"),
+            total_impact_factor=Sum("journal__impact_factor"),
+            average_impact_factor=Avg("journal__impact_factor"),
+            highest_impact_factor=Max("journal__impact_factor"),
+        )
+
+        context.update(
+            {
+                "country": country,
+                "publications": publications,
+                "publication_count": summary["total_publications"] or 0,
+                "total_impact": summary["total_impact_factor"] or 0,
+                "average_impact": summary["average_impact_factor"] or 0,
+                "highest_impact": summary["highest_impact_factor"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "Country Collaboration",
+                        "url": reverse("dashboard:country_collaboration"),
+                    },
+                    {
+                        "label": country,
+                    },
+                ],
+            }
+        )
+
+        return context
+
+
 # =====================================================
 # INSTITUTION COLLABORATION
 # =====================================================
@@ -1359,6 +1544,65 @@ class InstitutionCollaborationView(TemplateView):
         return context
 
 
+class InstitutionCollaborationDetailView(TemplateView):
+    template_name = "dashboard/institution_collaboration_detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        institution = unquote(kwargs["institution"]).strip()
+
+        publications = (
+            Publication.objects.select_related("journal")
+            .prefetch_related(
+                "authors",
+                Prefetch(
+                    "author_affiliations",
+                    queryset=AuthorAffiliation.objects.select_related(
+                        "author",
+                        "affiliation",
+                    ),
+                ),
+            )
+            .filter(author_affiliations__affiliation__name=institution)
+            .distinct()
+            .order_by("-date_published")
+        )
+
+        summary = publications.aggregate(
+            total_publications=Count("id"),
+            total_impact_factor=Sum("journal__impact_factor"),
+            average_impact_factor=Avg("journal__impact_factor"),
+            highest_impact_factor=Max("journal__impact_factor"),
+        )
+
+        context.update(
+            {
+                "institution": institution,
+                "publications": publications,
+                "publication_count": summary["total_publications"] or 0,
+                "total_impact": summary["total_impact_factor"] or 0,
+                "average_impact": summary["average_impact_factor"] or 0,
+                "highest_impact": summary["highest_impact_factor"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "Institution Collaboration",
+                        "url": reverse("dashboard:institution_collaboration"),
+                    },
+                    {
+                        "label": institution,
+                    },
+                ],
+            }
+        )
+
+        return context
+
+
 # =====================================================
 # PUBLICATION TRENDS
 # =====================================================
@@ -1455,6 +1699,67 @@ class TrendsView(TemplateView):
         return context
 
 
+class TrendYearDetailView(TemplateView):
+    template_name = "dashboard/trend_year_detail.html"
+
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        year = self.kwargs["year"]
+
+        publications = (
+            Publication.objects.filter(date_published__year=year)
+            .select_related("journal")
+            .prefetch_related(
+                "authors",
+                "departments",
+            )
+            .order_by("-date_published")
+        )
+
+        paginator = Paginator(
+            publications,
+            self.paginate_by,
+        )
+
+        page_obj = paginator.get_page(self.request.GET.get("page"))
+
+        summary = publications.aggregate(
+            total_publications=Count("id"),
+            total_impact_factor=Sum("journal__impact_factor"),
+            average_impact_factor=Avg("journal__impact_factor"),
+            highest_impact_factor=Max("journal__impact_factor"),
+        )
+
+        context.update(
+            {
+                "year": year,
+                "page_obj": page_obj,
+                "publication_count": summary["total_publications"] or 0,
+                "total_impact": summary["total_impact_factor"] or 0,
+                "average_impact": summary["average_impact_factor"] or 0,
+                "highest_impact": summary["highest_impact_factor"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "Publication Trends",
+                        "url": reverse("dashboard:trends"),
+                    },
+                    {
+                        "label": str(year),
+                    },
+                ],
+            }
+        )
+
+        return context
+
+
 # =====================================================
 # IMPACT ANALYSIS
 # =====================================================
@@ -1486,7 +1791,10 @@ class ImpactView(TemplateView):
         filtered = filterset.qs
 
         journal_impact = (
-            filtered.values("journal__name")
+            filtered.values(
+                "journal__id",
+                "journal__name",
+            )
             .annotate(
                 total_publications=Count("id"),
                 average_impact_factor=Avg("journal__impact_factor"),
@@ -1520,6 +1828,72 @@ class ImpactView(TemplateView):
                 "impact_total_factor": summary["total_impact_factor"] or 0,
                 "impact_average_factor": summary["average_impact_factor"] or 0,
                 "impact_highest_factor": summary["highest_impact_factor"] or 0,
+            }
+        )
+
+        return context
+
+
+class ImpactDetailView(TemplateView):
+    template_name = "dashboard/impact_detail.html"
+
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        journal = get_object_or_404(
+            Journal,
+            pk=self.kwargs["journal_id"],
+        )
+
+        publications = (
+            Publication.objects.filter(
+                journal=journal,
+            )
+            .select_related("journal")
+            .prefetch_related(
+                "authors",
+                "departments",
+            )
+            .order_by("-date_published")
+        )
+
+        paginator = Paginator(
+            publications,
+            self.paginate_by,
+        )
+
+        page_obj = paginator.get_page(self.request.GET.get("page"))
+
+        summary = publications.aggregate(
+            total_publications=Count("id"),
+            total_impact_factor=Sum("journal__impact_factor"),
+            average_impact_factor=Avg("journal__impact_factor"),
+            highest_impact_factor=Max("journal__impact_factor"),
+        )
+
+        context.update(
+            {
+                "journal": journal,
+                "page_obj": page_obj,
+                "total_publications": summary["total_publications"] or 0,
+                "total_impact_factor": summary["total_impact_factor"] or 0,
+                "average_impact_factor": summary["average_impact_factor"] or 0,
+                "highest_impact_factor": summary["highest_impact_factor"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "Impact Analysis",
+                        "url": reverse("dashboard:impact"),
+                    },
+                    {
+                        "label": journal.name,
+                    },
+                ],
             }
         )
 
@@ -1667,6 +2041,69 @@ class RRIRoleView(TemplateView):
                     },
                     {
                         "label": "RRI Role Overview",
+                    },
+                ],
+            }
+        )
+
+        return context
+
+
+class RRIRoleDetailView(TemplateView):
+    template_name = "dashboard/rri_role_detail.html"
+
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        role = self.kwargs["role"]
+
+        publications = (
+            Publication.objects.filter(authors__rri_role=role)
+            .select_related("journal")
+            .prefetch_related("authors", "departments")
+            .distinct()
+            .order_by("-date_published")
+        )
+
+        paginator = Paginator(publications, self.paginate_by)
+        page_obj = paginator.get_page(self.request.GET.get("page"))
+
+        summary = publications.aggregate(
+            publication_count=Count("id", distinct=True),
+            total_impact=Sum("journal__impact_factor"),
+            average_impact=Avg("journal__impact_factor"),
+            highest_impact=Max("journal__impact_factor"),
+        )
+
+        authors = (
+            Author.objects.filter(rri_role=role)
+            .distinct()
+            .order_by("first_name", "last_name")
+        )
+
+        context.update(
+            {
+                "role": role,
+                "page_obj": page_obj,
+                "publications": page_obj,
+                "authors": authors,
+                "publication_count": summary["publication_count"] or 0,
+                "total_impact": summary["total_impact"] or 0,
+                "average_impact": summary["average_impact"] or 0,
+                "highest_impact": summary["highest_impact"] or 0,
+                "breadcrumbs": [
+                    {
+                        "label": "Dashboard",
+                        "url": reverse("dashboard:home"),
+                    },
+                    {
+                        "label": "RRI Roles",
+                        "url": reverse("dashboard:rri_role"),
+                    },
+                    {
+                        "label": role,
                     },
                 ],
             }

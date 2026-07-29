@@ -1,147 +1,82 @@
 {% extends "base.html" %}
-
 {% block content %}
-
-<div class="space-y-8">
-
-    <div class="space-y-6">
-
-        {% include "components/page_header.html" with icon="🌍" title="Country-wise Collaboration" subtitle="International collaboration analysis by country." %}
-
-        {% include "components/filter_bar.html" %}
-
-    </div>
-
-    <!-- KPI -->
-
-    <div class="stats stats-vertical md:stats-horizontal shadow border border-base-300 w-full bg-base-100">
-
-    {% include "components/stats_cards.html" with title="Institutions" value=institution_count color="text-primary" %}
-    {% include "components/stats_cards.html" with title="Publications" value=institution_total_publications color="text-secondary" %}
-    {% include "components/stats_cards.html" with title="Average Impact" value=institution_average_impact|floatformat:2 color="text-accent" %}
-    {% include "components/stats_cards.html" with title="Highest Impact" value=institution_highest_impact|floatformat:2 color="text-success" %}
-
-</div>
-
-    <!-- Charts -->
-
-    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-    {% include "components/chart_card.html" with title="Top Institutions by Publications" id="institutionBarChart" %}
-
-    {% include "components/chart_card.html" with title="Top Institution Distribution" id="institutionPieChart" %}
-
-</div>
-
-    <!-- Table -->
-
-    <div class="card bg-base-100 shadow border border-base-300">
-
-    <div class="card-body">
-
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
-
-            <div>
-
-                <h2 class="card-title">
-                    Institution Summary
-                </h2>
-
-                <p class="text-sm text-base-content/60">
-                    Showing {{ page_obj.start_index }} - {{ page_obj.end_index }}
-                    of {{ page_obj.paginator.count }} institutions
-                </p>
-
+    <div class="space-y-8">
+        <div class="space-y-6">
+            {% include "components/page_header.html" with icon="🌍" title="Country-wise Collaboration" subtitle="International collaboration analysis by country." %}
+            {% include "components/filter_bar.html" %}
+        </div>
+        <!-- KPI -->
+        <div class="stats stats-vertical md:stats-horizontal shadow border border-base-300 w-full bg-base-100">
+            {% include "components/stats_cards.html" with title="Institutions" value=institution_count color="text-primary" %}
+            {% include "components/stats_cards.html" with title="Publications" value=institution_total_publications color="text-secondary" %}
+            {% include "components/stats_cards.html" with title="Average Impact" value=institution_average_impact|floatformat:2 color="text-accent" %}
+            {% include "components/stats_cards.html" with title="Highest Impact" value=institution_highest_impact|floatformat:2 color="text-success" %}
+        </div>
+        <!-- Charts -->
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+            {% include "components/chart_card.html" with title="Top Institutions by Publications" id="institutionBarChart" %}
+            {% include "components/chart_card.html" with title="Top Institution Distribution" id="institutionPieChart" %}
+        </div>
+        <!-- Table -->
+        <div class="card bg-base-100 shadow border border-base-300">
+            <div class="card-body">
+                <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="card-title">Institution Summary</h2>
+                        <p class="text-sm text-base-content/60">
+                            Showing {{ page_obj.start_index }} - {{ page_obj.end_index }}
+                            of {{ page_obj.paginator.count }} institutions
+                        </p>
+                    </div>
+                    <span class="badge badge-primary badge-outline badge-lg">{{ page_obj.paginator.count }} Institutions</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra table-pin-rows">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Institution</th>
+                                <th class="text-center">Publications</th>
+                                <th class="text-center">Total IF</th>
+                                <th class="text-center">Average IF</th>
+                                <th class="text-center">Share</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in page_obj %}
+                                <tr>
+                                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                                    <td>{{ row.author_affiliations__affiliation__name }}</td>
+                                    <td class="text-center">
+                                        <span class="badge badge-primary badge-outline">{{ row.publications }}</span>
+                                    </td>
+                                    <td class="text-center">{{ row.total_impact_factor|default:0|floatformat:2 }}</td>
+                                    <td class="text-center">
+                                        <span class="badge badge-success badge-outline">{{ row.average_impact_factor|default:0|floatformat:2 }}</span>
+                                    </td>
+                                    <td class="text-center">{% widthratio row.publications institution_total_publications 100 %}%</td>
+                                    <td class="text-center">
+                                        <a href="{% url 'dashboard:institution_collaboration_detail' row.author_affiliations__affiliation__name|urlencode %}"
+                                           class="btn btn-primary btn-xs">View</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6">
+                                        {% include "components/empty_state.html" with title="No institution data found" description="Try changing your filters." %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include "components/pagination.html" with object_name="institutions" %}
             </div>
-
-            <span class="badge badge-primary badge-outline badge-lg">
-                {{ page_obj.paginator.count }} Institutions
-            </span>
-
         </div>
-
-        <div class="overflow-x-auto">
-
-            <table class="table table-zebra table-pin-rows">
-
-                <thead>
-
-                    <tr>
-
-                        <th>#</th>
-                        <th>Institution</th>
-                        <th class="text-center">Publications</th>
-                        <th class="text-center">Total IF</th>
-                        <th class="text-center">Average IF</th>
-                        <th class="text-center">Share</th>
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-                    {% for row in page_obj %}
-
-                        <tr>
-
-                            <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
-
-                            <td>{{ row.author_affiliations__affiliation__name }}</td>
-
-                            <td class="text-center">
-                                <span class="badge badge-primary badge-outline">
-                                    {{ row.publications }}
-                                </span>
-                            </td>
-
-                            <td class="text-center">
-                                {{ row.total_impact_factor|default:0|floatformat:2 }}
-                            </td>
-
-                            <td class="text-center">
-                                <span class="badge badge-success badge-outline">
-                                    {{ row.average_impact_factor|default:0|floatformat:2 }}
-                                </span>
-                            </td>
-
-                            <td class="text-center">
-                                {% widthratio row.publications institution_total_publications 100 %}%
-                            </td>
-
-                        </tr>
-
-                    {% empty %}
-
-                        <tr>
-
-                            <td colspan="6">
-
-                                {% include "components/empty_state.html" with title="No institution data found" description="Try changing your filters." %}
-
-                            </td>
-
-                        </tr>
-
-                    {% endfor %}
-
-                </tbody>
-
-            </table>
-
-        </div>
-
-        {% include "components/pagination.html" with object_name="institutions" %}
-
     </div>
-
-</div>
-
-</div>
-
-{{ institution_chart_data|json_script:"institution-data" }}
-
-<script>
+    {{ institution_chart_data|json_script:"institution-data" }}
+    <script>
 document.addEventListener("DOMContentLoaded", () => {
 
     const data = JSON.parse(
@@ -225,6 +160,5 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
 });
-</script>
-
+    </script>
 {% endblock %}
