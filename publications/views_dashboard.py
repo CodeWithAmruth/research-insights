@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from django.shortcuts import render
 from django.db.models import Count, Avg, Sum, Q
 from django.contrib.auth.decorators import login_required
@@ -7,16 +5,13 @@ from django.contrib.auth.decorators import login_required
 from .models import (
     Publication,
     Author,
-    AuthorAffiliation,
     Affiliation,
 )
 
 
 # ---------- Helper: detect RRI affiliation ----------
 def rri_filter():
-    return Q(
-        author_affiliations__affiliation__name__icontains="raman"
-    )
+    return Q(author_affiliations__affiliation__name__icontains="raman")
 
 
 @login_required
@@ -30,20 +25,17 @@ def dashboard(request):
 
     # ---------- Date filter ----------
     if start_date and end_date:
-        publications = publications.filter(
-            date_published__range=[start_date, end_date]
-        )
+        publications = publications.filter(date_published__range=[start_date, end_date])
 
     # ---------- BASIC METRICS ----------
     total_publications = publications.count()
 
-    total_impact_factor = publications.aggregate(
-        total=Sum("journal__impact_factor")
-    )["total"] or 0
+    total_impact_factor = (
+        publications.aggregate(total=Sum("journal__impact_factor"))["total"] or 0
+    )
 
     avg_impact_factor = (
-        total_impact_factor / total_publications
-        if total_publications else 0
+        total_impact_factor / total_publications if total_publications else 0
     )
 
     # ---------- DOCUMENT TYPE ----------
@@ -54,26 +46,20 @@ def dashboard(request):
     )
 
     # ---------- COLLABORATION TYPE ----------
-    by_collaboration = (
-        publications.values("collaboration_type")
-        .annotate(count=Count("id"))
+    by_collaboration = publications.values("collaboration_type").annotate(
+        count=Count("id")
     )
 
     # ---------- RRI ROLE ----------
-    by_rri_role = (
-        publications.values("authors__rri_role")
-        .annotate(count=Count("id", distinct=True))
+    by_rri_role = publications.values("authors__rri_role").annotate(
+        count=Count("id", distinct=True)
     )
 
-    avg_pub_per_role = (
-        publications.values("authors__rri_role")
-        .annotate(avg=Avg("id"))
-    )
+    avg_pub_per_role = publications.values("authors__rri_role").annotate(avg=Avg("id"))
 
     # ---------- DEPARTMENTS ----------
-    by_department = (
-        publications.values("departments__name")
-        .annotate(count=Count("id", distinct=True))
+    by_department = publications.values("departments__name").annotate(
+        count=Count("id", distinct=True)
     )
 
     # ---------- TOP AUTHORS ----------
@@ -109,17 +95,14 @@ def dashboard(request):
             "total_publications": total_publications,
             "total_impact_factor": round(total_impact_factor, 2),
             "avg_impact_factor": round(avg_impact_factor, 2),
-
             "by_document_type": by_document_type,
             "by_collaboration": by_collaboration,
             "by_rri_role": by_rri_role,
             "avg_pub_per_role": avg_pub_per_role,
             "by_department": by_department,
-
             "top_authors": top_authors,
             "top_countries": top_countries,
             "top_institutions": top_institutions,
-
             "start_date": start_date,
             "end_date": end_date,
         },

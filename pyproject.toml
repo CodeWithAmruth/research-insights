@@ -1,0 +1,5 @@
+[tool.djlint]
+profile = "django"
+ignore = "H030,T003,H031,H021,H031,H006,H013,H014,T001,H029,H025"
+[tool.ruff.lint]
+ignore = ["RUF012","RUF010","BLE001","DTZ011","TRY004","G201","DTZ007","PLR1730","S110","PLC0206","TRY401","FURB157","SIM102","I001","UP032","TRY002","DTZ005"]

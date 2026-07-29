@@ -1,22 +1,16 @@
 {% extends "base.html" %}
-
 {% block content %}
-
     <div class="space-y-8">
-
-    <!-- ================= HEADER ================= -->
+        <!-- ================= HEADER ================= -->
         <div class="space-y-6">
             {% include "components/page_header.html" with icon="📈" title="Publication Trends" subtitle="Year-wise publication growth and journal impact factor analysis." %}
             {% include "components/filter_bar.html" %}
         </div>
-
-    <!-- ================= SUMMARY STATS ================= -->
+        <!-- ================= SUMMARY STATS ================= -->
         <div class="stats stats-vertical md:stats-horizontal shadow border border-base-300 w-full bg-base-100">
-
             {% include "components/stats_cards.html" with title="Years Tracked" value=trend_years_tracked color="text-primary" %}
             {% include "components/stats_cards.html" with title="Total Publications" value=trend_total_publications color="text-secondary" %}
             {% include "components/stats_cards.html" with title="Total Impact Factor" value=trend_total_impact|floatformat:2 color="text-accent" %}
-
             <div class="stat">
                 <div class="stat-title">Latest Year</div>
                 <div class="stat-value text-info">{{ trend_latest_year|default:"—" }}</div>
@@ -28,217 +22,120 @@
                     </div>
                 {% endif %}
             </div>
-
         </div>
-
-    <!-- ================= CHARTS ================= -->
+        <!-- ================= CHARTS ================= -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-        <!-- Publications -->
+            <!-- Publications -->
             <div class="card bg-base-100 shadow border border-base-300">
                 <div class="card-body">
-
                     <div class="flex justify-between items-center mb-2">
-                        <h2 class="card-title">
-                            Publications by Year
-                        </h2>
-
-                        <div class="badge badge-primary badge-outline">
-                            {{ trend_years_tracked }} Years
-                        </div>
+                        <h2 class="card-title">Publications by Year</h2>
+                        <div class="badge badge-primary badge-outline">{{ trend_years_tracked }} Years</div>
                     </div>
-
                     <div class="h-80 relative">
-                        <canvas id="publicationChart" class="{% if not publication_trends %}hidden{% endif %}"></canvas>
+                        <canvas id="publicationChart"
+                                class="{% if not publication_trends %}hidden{% endif %}"></canvas>
                         {% if not publication_trends %}
                             <div class="absolute inset-0 flex items-center justify-center text-base-content/50 text-sm">
                                 No publication data available.
                             </div>
                         {% endif %}
                     </div>
-
                 </div>
             </div>
-
-        <!-- Impact -->
+            <!-- Impact -->
             <div class="card bg-base-100 shadow border border-base-300">
                 <div class="card-body">
-
                     <div class="flex justify-between items-center mb-2">
-                        <h2 class="card-title">
-                            Average Impact Factor
-                        </h2>
-
-                        <div class="badge badge-info badge-outline">
-                            Trend
-                        </div>
+                        <h2 class="card-title">Average Impact Factor</h2>
+                        <div class="badge badge-info badge-outline">Trend</div>
                     </div>
-
                     <div class="h-80 relative">
-                        <canvas id="impactChart" class="{% if not publication_trends %}hidden{% endif %}"></canvas>
+                        <canvas id="impactChart"
+                                class="{% if not publication_trends %}hidden{% endif %}"></canvas>
                         {% if not publication_trends %}
                             <div class="absolute inset-0 flex items-center justify-center text-base-content/50 text-sm">
                                 No impact factor data available.
                             </div>
                         {% endif %}
                     </div>
-
                 </div>
             </div>
-
         </div>
-
-    <!-- ================= TABLE ================= -->
-
+        <!-- ================= TABLE ================= -->
         <div class="card bg-base-100 shadow border border-base-300">
-
             <div class="card-body">
-
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-
                     <div>
-
-                        <h2 class="card-title">
-                            Year-wise Publication Statistics
-                        </h2>
-
+                        <h2 class="card-title">Year-wise Publication Statistics</h2>
                         <p class="text-sm text-base-content/60">
-
                             Showing
-
                             {{ page_obj.start_index }}
-
                             -
-
                             {{ page_obj.end_index }}
-
                             of
-
                             {{ page_obj.paginator.count }}
-
                             years
-
                         </p>
-
                     </div>
-
                     <div class="badge badge-info badge-outline badge-lg">
-
                         {{ page_obj.paginator.count }}
-
                         Years
-
                     </div>
-
                 </div>
-
                 <div class="overflow-x-auto">
-
                     <table class="table table-zebra table-pin-rows">
-
                         <thead>
-
                             <tr>
-
                                 <th>#</th>
-
                                 <th>Year</th>
-
-                                <th class="text-center">
-                                    Publications
-                                </th>
-
-                                <th class="text-center">
-                                    Total Impact
-                                </th>
-
-                                <th class="text-center">
-                                    Average Impact
-                                </th>
-
+                                <th class="text-center">Publications</th>
+                                <th class="text-center">Total Impact</th>
+                                <th class="text-center">Average Impact</th>
+                                <th class="text-center">Actions</th>
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             {% for row in page_obj %}
-
                                 <tr class="hover">
-
-                                    <td>
-
-                                        {{ page_obj.start_index|add:forloop.counter0 }}
-
-                                    </td>
-
+                                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
                                     <td class="font-semibold">
-                                        {{ row.date_published__year }}
+                                        <a href="{% url 'dashboard:trend_year_detail' row.date_published__year %}"
+                                           class="link link-primary">{{ row.date_published__year }}</a>
                                     </td>
-
                                     <td class="text-center">
-
-                                        <span class="badge badge-success badge-outline">
-                                            {{ row.total }}
-                                        </span>
-
+                                        <span class="badge badge-success badge-outline">{{ row.total }}</span>
                                     </td>
-
                                     <td class="text-center font-medium">
-
                                         {% if row.total_impact_factor %}
                                             {{ row.total_impact_factor|floatformat:2 }}
                                         {% else %}
                                             —
                                         {% endif %}
-
                                     </td>
-
                                     <td class="text-center">
-
-                                        <span class="badge badge-warning badge-outline">
-                                            {{ row.avg_if|default:0|floatformat:2 }}
-                                        </span>
-
+                                        <span class="badge badge-warning badge-outline">{{ row.avg_if|default:0|floatformat:2 }}</span>
                                     </td>
-
+                                    <td class="text-center">
+                                        <a href="{% url 'dashboard:trend_year_detail' row.date_published__year %}"
+                                           class="btn btn-sm btn-outline btn-primary">View</a>
+                                    </td>
                                 </tr>
-
                             {% empty %}
-
                                 <tr>
-
                                     <td colspan="5">
-
                                         {% include "components/empty_state.html" with title="No publication trends found" description="Try changing your filters." %}
-
-
                                     </td>
-
                                 </tr>
-
                             {% endfor %}
-
-
-
-
                         </tbody>
-
-
-
                     </table>
-
                 </div>
-
                 {% include "components/pagination.html" with object_name="years" %}
             </div>
-
         </div>
-
     </div>
-
     {{ publication_trends_data|json_script:"trend-data" }}
-
     <script>
         document.addEventListener("DOMContentLoaded", () => {
 
@@ -413,5 +310,4 @@
 
         });
     </script>
-
 {% endblock %}

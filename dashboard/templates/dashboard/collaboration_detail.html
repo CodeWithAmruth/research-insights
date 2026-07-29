@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+    <div class="space-y-8">
+        {% include "components/page_header.html" with icon="🤝" title=collaboration_type subtitle="Publications for the selected collaboration type." %}
+        <div class="stats stats-vertical md:stats-horizontal shadow border border-base-300 w-full">
+            {% include "components/stats_cards.html" with title="Publications" value=publication_count color="text-primary" %}
+            {% include "components/stats_cards.html" with title="Total Impact" value=total_impact_factor|floatformat:2 color="text-secondary" %}
+            {% include "components/stats_cards.html" with title="Average Impact" value=average_impact_factor|floatformat:2 color="text-accent" %}
+            {% include "components/stats_cards.html" with title="Highest Impact" value=highest_impact_factor|floatformat:2 color="text-success" %}
+        </div>
+        <div class="card bg-base-100 shadow border border-base-300">
+            <div class="card-body">
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Title</th>
+                                <th>Journal</th>
+                                <th>Date</th>
+                                <th>Document Type</th>
+                                <th>Authors</th>
+                                <th>Impact Factor</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for publication in page_obj %}
+                                <tr>
+                                    <td>{{ page_obj.start_index|add:forloop.counter0 }}</td>
+                                    <td>{{ publication.title }}</td>
+                                    <td>{{ publication.journal.name|default:"—" }}</td>
+                                    <td>{{ publication.date_published|date:"d M Y" }}</td>
+                                    <td>{{ publication.document_type|default:"—" }}</td>
+                                    <td>
+                                        {% for author in publication.authors.all %}
+                                            {{ author.first_name }} {{ author.last_name }}{% if not forloop.last %}, {% endif %}
+                                        {% empty %}
+                                            —
+                                        {% endfor %}
+                                    </td>
+                                    <td>{{ publication.journal.impact_factor|default:0|floatformat:2 }}</td>
+                                    <td>
+                                        <a href="{% url 'publications:publication_detail' publication.pk %}"
+                                           class="btn btn-sm btn-outline btn-primary">View</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8">
+                                        {% include "components/empty_state.html" with title="No publications found" description="No publications are available for this collaboration type." %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% include "components/pagination.html" with object_name="publications" %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

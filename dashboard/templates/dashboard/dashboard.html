@@ -1,172 +1,76 @@
 {% extends "base.html" %}
 {% block content %}
-
     <div class="space-y-8">
-
-    <!-- ================= Header ================= -->
-
+        <!-- ================= Header ================= -->
         <div class="space-y-6">
-
             {% include "components/page_header.html" with icon="📊" title="Research Dashboard" subtitle="Publications analytics & performance overview" %}
-
-
             {% include "components/filter_bar.html" %}
-
         </div>
-
-
-    <!-- ================= KPI Cards ================= -->
-
+        <!-- ================= KPI Cards ================= -->
         <div class="stats stats-vertical lg:stats-horizontal shadow border border-base-300 bg-base-100 w-full">
-
             {% include "components/stats_cards.html" with title="Total Publications" value=total_publications color="text-info" %}
-
             {% include "components/stats_cards.html" with title="Total Impact" value=total_impact_factor|floatformat:2 color="text-success" %}
-
             {% include "components/stats_cards.html" with title="Average Impact" value=avg_impact_factor|floatformat:2 color="text-warning" %}
-
             {% include "components/stats_cards.html" with title="Active Authors" value=active_authors color="text-error" %}
-
         </div>
-
-
-    <!-- ================= Charts ================= -->
-
+        <!-- ================= Charts ================= -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
             {% include "components/chart_card.html" with title="Publications by Type" id="barChart" %}
-
             {% include "components/chart_card.html" with title="Year-over-Year Trend" id="lineChart" %}
-
         </div>
-
-
-    <!-- ================= Recent Publications ================= -->
-
+        <!-- ================= Recent Publications ================= -->
         <div class="card bg-base-100 shadow border border-base-300">
-
             <div class="card-body">
-
                 <div class="flex items-center justify-between">
-
                     <div>
-
-                        <h2 class="card-title">
-                            Recent Publications
-                        </h2>
-
-                        <p class="text-sm text-base-content/60">
-                            Latest {{ recent_publications|length }} publications
-                        </p>
-
+                        <h2 class="card-title">Recent Publications</h2>
+                        <p class="text-sm text-base-content/60">Latest {{ recent_publications|length }} publications</p>
                     </div>
-
-                    <a
-                        href="{% url 'publications:list' %}"
-                        class="btn btn-sm btn-outline btn-info"
-                    >
-                        View All
-                    </a>
-
+                    <a href="{% url 'publications:list' %}"
+                       class="btn btn-sm btn-outline btn-info">View All</a>
                 </div>
-
                 <div class="overflow-x-auto mt-6">
-
                     <table class="table table-zebra">
-
                         <thead>
-
                             <tr>
-
                                 <th>#</th>
-
                                 <th>Title</th>
-
                                 <th>Authors</th>
-
                                 <th>Date</th>
-
-                                <th></th>
-
+                                <th>Action</th>
                             </tr>
-
                         </thead>
-
                         <tbody>
-
                             {% for pub in recent_publications %}
-
                                 <tr class="hover">
-
                                     <td>{{ forloop.counter }}</td>
-
                                     <td>
-
                                         <div class="font-medium">
-
-                                            {{ pub.title }}
-
-                                        </div>
-
+                                            <a href="{% url 'publications:publication_detail' pub.id %}"
+                                               class="underline text-primary">{{ pub.title }}</a></div>
                                     </td>
-
                                     <td>
-
-                                        <span class="badge badge-outline">
-
-                                            {{ pub.author_count }} Authors
-                                        </span>
-
+                                        <span class="badge badge-outline">{{ pub.author_count }} Authors</span>
                                     </td>
-
+                                    <td>{{ pub.date_published|date:"d M Y" }}</td>
                                     <td>
-
-                                        {{ pub.date_published|date:"d M Y" }}
-
+                                        <a href="{% url 'publications:publication_detail' pub.id %}"
+                                           class="btn btn-xs btn-info btn-outline">View</a>
                                     </td>
-
-                                    <td>
-
-                                        <a
-                                            href="{% url 'publications:publication_detail' pub.id %}"
-                                            class="btn btn-xs btn-info btn-outline"
-                                        >
-                                            View
-                                        </a>
-
-                                    </td>
-
                                 </tr>
-
                             {% empty %}
-
                                 <tr>
-
-                                    <td colspan="5" class="text-center py-10 text-base-content/60">
-
-                                        No publications available.
-
-                                    </td>
-
+                                    <td colspan="5" class="text-center py-10 text-base-content/60">No publications available.</td>
                                 </tr>
-
                             {% endfor %}
-
                         </tbody>
-
                     </table>
-
                 </div>
-
             </div>
-
         </div>
-
     </div>
-
     {{ document_counts|json_script:"document-counts" }}
     {{ year_stats|json_script:"year-stats" }}
-
     <script>
         document.addEventListener("DOMContentLoaded", () => {
 
@@ -270,5 +174,4 @@
 
         });
     </script>
-
 {% endblock %}
