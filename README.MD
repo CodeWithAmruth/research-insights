@@ -17,15 +17,6 @@ This project supports both **Linux/macOS** and **Windows**.
 
 ---
 
-# Clone the Repository
-
-```bash
-git clone <repository-url>
-cd <project-folder>
-```
-
----
-
 # Linux / macOS
 
 ## 1. Create Virtual Environment
