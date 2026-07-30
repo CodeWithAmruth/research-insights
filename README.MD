@@ -11,8 +11,8 @@ This project supports both **Linux/macOS** and **Windows**.
 
 - Python 3.10+
 - Git
-- Virtual Environment (`venv`)
-- Node.js & npm (for Tailwind CSS)
+- Node.js (LTS) and npm
+- Python Virtual Environment (`venv`)
 - Database (SQLite/PostgreSQL/MySQL depending on your project)
 
 ---
@@ -33,7 +33,7 @@ python3 -m venv venv
 
 ---
 
-## 2. Install Dependencies
+## 2. Install Python Dependencies
 
 ```bash
 make install_packages
@@ -41,9 +41,17 @@ make install_packages
 
 ---
 
-## 3. Create `.env`
+## 3. Install Tailwind Dependencies
 
-Copy the sample environment file.
+Since `theme/static_src/node_modules` is removed/ignored by Git, install the Node packages after cloning:
+
+```bash
+make tailwind-install
+```
+
+---
+
+## 4. Create `.env`
 
 ```bash
 cp .env.example .env
@@ -53,7 +61,7 @@ Update the values according to your environment.
 
 ---
 
-## 4. Apply Migrations
+## 5. Apply Migrations
 
 ```bash
 make migrate
@@ -61,7 +69,7 @@ make migrate
 
 ---
 
-## 5. Create Superuser
+## 6. Create Superuser
 
 ```bash
 make superuser
@@ -69,7 +77,7 @@ make superuser
 
 ---
 
-## 6. Run Development Server
+## 7. Run Development Server
 
 ```bash
 make run
@@ -77,7 +85,7 @@ make run
 
 ---
 
-## 7. Start Tailwind CSS
+## 8. Start Tailwind CSS
 
 ```bash
 make tailwind
@@ -85,7 +93,7 @@ make tailwind
 
 ---
 
-## 8. Run Django + Tailwind Together
+## 9. Run Django + Tailwind Together
 
 ```bash
 make dev-all
@@ -107,7 +115,7 @@ python -m venv venv
 
 ---
 
-## 2. Activate Virtual Environment
+## 2. Activate the Virtual Environment
 
 ### Command Prompt (CMD)
 
@@ -129,7 +137,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 ---
 
-## 3. Install Dependencies
+## 3. Install Python Dependencies
 
 ```powershell
 pip install -r requirements.txt
@@ -137,15 +145,23 @@ pip install -r requirements.txt
 
 ---
 
-## 4. Create `.env`
+## 4. Install Tailwind Dependencies
 
-Copy
+```powershell
+python manage.py tailwind install
+```
+
+---
+
+## 5. Create `.env`
+
+Copy:
 
 ```
 .env.example
 ```
 
-to
+to:
 
 ```
 .env
@@ -155,7 +171,7 @@ and update the required values.
 
 ---
 
-## 5. Apply Migrations
+## 6. Apply Migrations
 
 ```powershell
 python manage.py migrate
@@ -163,7 +179,7 @@ python manage.py migrate
 
 ---
 
-## 6. Create Superuser
+## 7. Create Superuser
 
 ```powershell
 python manage.py createsuperuser
@@ -171,7 +187,7 @@ python manage.py createsuperuser
 
 ---
 
-## 7. Start Django Server
+## 8. Start Django Server
 
 ```powershell
 python manage.py runserver
@@ -179,9 +195,9 @@ python manage.py runserver
 
 ---
 
-## 8. Start Tailwind
+## 9. Start Tailwind CSS
 
-Open a second terminal.
+Open a second terminal:
 
 ```powershell
 python manage.py tailwind start
@@ -191,57 +207,57 @@ python manage.py tailwind start
 
 # Common Commands
 
-| Task                       | Linux/macOS             | Windows                                    |
-| -------------------------- | ----------------------- | ------------------------------------------ |
-| Create Virtual Environment | `make create_venv`      | `python -m venv venv`                      |
-| Install Dependencies       | `make install_packages` | `pip install -r requirements.txt`          |
-| Freeze Requirements        | `make freeze`           | `pip freeze > requirements.txt`            |
-| Run Server                 | `make run`              | `python manage.py runserver`               |
-| Start Tailwind             | `make tailwind`         | `python manage.py tailwind start`          |
-| Build Tailwind             | `make tailwind-build`   | `python manage.py tailwind build`          |
-| Create Migrations          | `make makemigrations`   | `python manage.py makemigrations`          |
-| Apply Migrations           | `make migrate`          | `python manage.py migrate`                 |
-| Show Migrations            | `make showmigrations`   | `python manage.py showmigrations`          |
-| Create Superuser           | `make superuser`        | `python manage.py createsuperuser`         |
-| Django Shell               | `make shell`            | `python manage.py shell`                   |
-| Run Tests                  | `make test`             | `python manage.py test`                    |
-| Verbose Tests              | `make test-v2`          | `python manage.py test -v 2`               |
-| Collect Static Files       | `make collectstatic`    | `python manage.py collectstatic --noinput` |
-| Add Cron Jobs              | `make cron_add`         | `python manage.py crontab add`             |
-| Remove Cron Jobs           | `make cron_remove`      | `python manage.py crontab remove`          |
-| Show Cron Jobs             | `make cron_show`        | `python manage.py crontab show`            |
+| Task                              | Linux/macOS             | Windows                                    |
+| --------------------------------- | ----------------------- | ------------------------------------------ |
+| Create Virtual Environment        | `make create_venv`      | `python -m venv venv`                      |
+| Install Python Dependencies       | `make install_packages` | `pip install -r requirements.txt`          |
+| **Install Tailwind Dependencies** | `make tailwind-install` | `python manage.py tailwind install`        |
+| Freeze Requirements               | `make freeze`           | `pip freeze > requirements.txt`            |
+| Run Server                        | `make run`              | `python manage.py runserver`               |
+| Start Tailwind                    | `make tailwind`         | `python manage.py tailwind start`          |
+| Build Tailwind                    | `make tailwind-build`   | `python manage.py tailwind build`          |
+| Create Migrations                 | `make makemigrations`   | `python manage.py makemigrations`          |
+| Apply Migrations                  | `make migrate`          | `python manage.py migrate`                 |
+| Show Migrations                   | `make showmigrations`   | `python manage.py showmigrations`          |
+| Create Superuser                  | `make superuser`        | `python manage.py createsuperuser`         |
+| Django Shell                      | `make shell`            | `python manage.py shell`                   |
+| Run Tests                         | `make test`             | `python manage.py test`                    |
+| Verbose Tests                     | `make test-v2`          | `python manage.py test -v 2`               |
+| Collect Static Files              | `make collectstatic`    | `python manage.py collectstatic --noinput` |
+| Add Cron Jobs                     | `make cron_add`         | `python manage.py crontab add`             |
+| Remove Cron Jobs                  | `make cron_remove`      | `python manage.py crontab remove`          |
+| Show Cron Jobs                    | `make cron_show`        | `python manage.py crontab show`            |
 
 ---
 
 # Deployment (Linux)
 
-The project includes helper commands for Apache deployment.
-
-Generate Apache configuration:
+Generate the Apache configuration:
 
 ```bash
 make conf DOMAIN=example.com PORT=8000 SITE_NAME=myproject
 ```
 
-Deploy:
+Deploy the application:
 
 ```bash
 make deploy-server DOMAIN=example.com PORT=8000 SITE_NAME=myproject
 ```
 
-This will:
+This command will:
 
 - Build Tailwind CSS
 - Collect static files
-- Generate Apache configuration
-- Enable the site
+- Generate the Apache configuration
+- Enable the Apache site
 - Restart Apache
 
 ---
 
 # Notes
 
-- Linux/macOS users are encouraged to use the provided `Makefile` for convenience.
-- Windows users can execute the equivalent Python commands manually.
-- Tailwind CSS should be run in a separate terminal during development.
-- Before deploying, ensure `DEBUG=False` and configure production settings appropriately.
+- `theme/static_src/node_modules` is ignored by Git and **must be installed after cloning** using `make tailwind-install` (Linux/macOS) or `python manage.py tailwind install` (Windows).
+- Linux/macOS users are encouraged to use the provided `Makefile`.
+- Windows users can run the equivalent Django commands manually.
+- Run the Django server and Tailwind watcher in separate terminals during development.
+- Before deploying, ensure `DEBUG=False` and your production settings are configured correctly.
