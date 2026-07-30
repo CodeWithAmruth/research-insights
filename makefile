@@ -32,20 +32,8 @@ VENV_PATH=$(BASE_DIR)/$(VENV)
 # ========================
 HOST=0.0.0.0
 
-# ========================
-# Celery Settings
-# ========================
-CELERY_APP=core
-CELERY_LOGLEVEL=INFO
 
-env-check:
-	@echo "DEBUG=$(DEBUG)"
-	@echo "ALLOWED_HOSTS=$(ALLOWED_HOSTS)"
-	@echo "Database Name: $(DB_NAME)"
-	@echo "Database User: $(DB_USER)"
-	@echo "Database Password: $(DB_PASSWORD)"
-	@echo "Database Host: $(DB_HOST)"
-	@echo "Database Port: $(DB_PORT)"
+
 
 #? For deploying run `make deploy`
 
@@ -94,9 +82,7 @@ migrate:
 	@echo "Migrating ..."
 	@bash -c '$(ACTIVATE) && $(PY) manage.py migrate'
 
-create-app:
-	@echo "Creating Django app ..."
-	@bash -c '$(ACTIVATE) && $(PY) manage.py startapp $(APP_NAME)'
+
 
 showmigrations:
 	@echo "Showing migrations ..."
@@ -141,26 +127,6 @@ cron_show:
 	@bash -c '$(ACTIVATE) && $(PY) manage.py crontab show'
 
 
-send_birthday_emails:
-	@echo "Sending birthday emails..."
-	@bash -c '$(ACTIVATE) && $(PY) manage.py send_birthday_emails'
-
-auto_lock_payslips:
-	@echo "Auto-locking payslips..."
-	@bash -c '$(ACTIVATE) && $(PY) manage.py auto_lock_payslips'
-
-send_expiry_report:
-	@echo "Sending expiry report..."
-	@bash -c '$(ACTIVATE) && $(PY) manage.py send_expiry_report'
-
-celery:
-	@echo "Starting Celery worker..."
-	@bash -c '$(ACTIVATE) && celery -A $(CELERY_APP) worker -l $(CELERY_LOGLEVEL)'
-
-celery_stop:
-	@echo "Stopping Celery worker..."
-	@pkill -f 'celery -A core worker'
-
 conf:
 	@echo "Generating Apache config file..."
 	@DOMAIN=$(DOMAIN) \
@@ -184,32 +150,3 @@ deploy-server: tailwind-build collectstatic conf ensure_port
 	@sudo systemctl restart apache2
 	@echo "Deployment complete 🚀"
 
-celery_service:
-	@echo "Generating Celery systemd service..."
-	@SITE_NAME=$(SITE_NAME) \
-	VENV_PATH=$(VENV_PATH) \
-	CELERY_APP=$(CELERY_APP) \
-	CELERY_LOGLEVEL=$(CELERY_LOGLEVEL) \
-	$(PY) generate_celery_service.py
-
-deploy-celery: celery_service
-	@echo "🔍 Checking Redis service..."
-	@if ! systemctl is-active --quiet redis-server; then \
-		echo "⚠️ Redis is not running. Starting Redis..."; \
-		sudo systemctl start redis-server || (echo "❌ Failed to start Redis. Aborting." && exit 1); \
-	fi
-
-	@echo "🔍 Verifying Redis connection..."
-	@if ! redis-cli ping | grep -q PONG; then \
-		echo "❌ Redis is not responding. Aborting."; \
-		exit 1; \
-	else \
-		echo "✅ Redis is ready"; \
-	fi
-
-	@sudo rsync -av $(SITE_NAME)_celery.service /etc/systemd/system/
-	@sudo systemctl daemon-reload
-	@sudo systemctl enable $(SITE_NAME)_celery
-	@sudo systemctl restart $(SITE_NAME)_celery
-
-	@echo "Celery deployed successfully 🚀"
