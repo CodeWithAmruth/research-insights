@@ -65,6 +65,9 @@ run:
 	@echo "Starting Django server on $(HOST):$(PORT)..."
 	@bash -c '$(ACTIVATE) && $(PY) manage.py runserver $(HOST):$(PORT)'
 
+tailwind-install:
+	@echo "Installing Tailwind ..."
+	@bash -c '$(ACTIVATE) && $(PY) manage.py tailwind install'
 
 tailwind:
 	@echo "Starting Tailwind ..."
